@@ -108,10 +108,9 @@ extension SearchViewController: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         
+        guard let navVC = navigationController else { return }
         let selectedBook = books[indexPath.row]
-        let detailViewController = BookViewController()
-        detailViewController.viewModel = BookDetailViewModel(book: selectedBook)
-        navigationController?.pushViewController(detailViewController, animated: true)
+        coordinator.showBookDetailScreen(for: selectedBook, in: navVC)
     }
 }
 
@@ -123,12 +122,12 @@ private extension SearchViewController {
     
     @objc private func textFieldDidChange(_ textField: UITextField) {
         searchTask?.cancel()
-
+        
         let newSearchTask = DispatchWorkItem {
             let query = textField.text ?? ""
         }
         searchTask = newSearchTask
-
+        
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             if self.searchTask === newSearchTask {
                 newSearchTask.perform()
