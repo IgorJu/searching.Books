@@ -5,7 +5,6 @@
 //  Created by Igor on 07.02.2024.
 //
 import UIKit
-import Alamofire
 import SnapKit
 
 final class SearchViewController: UIViewController {
@@ -23,10 +22,6 @@ final class SearchViewController: UIViewController {
         return tf
     }()
     
-    private let query = "book"
-    private let viewModel = SearchViewModel(networkManager: NetworkManager(), storageManager: StorageManager())
-    
-    
     private var books: [Item] = [] {
         didSet {
             tableView.reloadData()
@@ -34,6 +29,18 @@ final class SearchViewController: UIViewController {
     }
     
     private var searchTask: DispatchWorkItem?
+    
+    private let coordinator: SearchCoordinator
+    private let query = "book"
+    
+    init(coordinator: SearchCoordinator) {
+        self.coordinator = coordinator
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -46,10 +53,10 @@ final class SearchViewController: UIViewController {
         view.addSubview(tableView)
         view.addSubview(searchTextField)
         setConstraints()
-        //getSavedSearchResults()
+        setupSearchTextField()
     }
     
-    func setConstraints() {
+    private func setConstraints() {
         tableView.snp.makeConstraints { make in
             make.directionalHorizontalEdges.equalToSuperview()
             make.bottom.equalToSuperview()
@@ -63,31 +70,30 @@ final class SearchViewController: UIViewController {
         }
     }
     
-    func searchBooks(_ query: String) {
-            viewModel.searchBooks(query) { [weak self] books, error in
-                if let books = books {
-                    self?.books = books
-                } else {
-                    print("Error")
-                }
+    private func searchBooks(_ query: String) {
+        coordinator.viewModel.searchBooks(query) { [weak self] books, error in
+            if let books = books {
+                self?.books = books
+            } else {
+                print("Error")
             }
         }
+    }
 }
 
+//MARK: - TextField delegate
 extension SearchViewController: UITextFieldDelegate {
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         guard let text = (textField.text as NSString?)?.replacingCharacters(in: range, with: string) else { return true }
         
-        // Perform search
         searchBooks(text)
         
         return true
     }
 }
 
-
+//MARK: - DataSource, delegate
 extension SearchViewController: UITableViewDataSource, UITableViewDelegate {
-    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return books.count
     }
@@ -97,8 +103,8 @@ extension SearchViewController: UITableViewDataSource, UITableViewDelegate {
         let book = books[indexPath.row]
         cell.configure(with: book)
         return cell
-        
     }
+    
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         
@@ -106,6 +112,28 @@ extension SearchViewController: UITableViewDataSource, UITableViewDelegate {
         let detailViewController = BookViewController()
         detailViewController.viewModel = BookDetailViewModel(book: selectedBook)
         navigationController?.pushViewController(detailViewController, animated: true)
+    }
+}
+
+//MARK: - Настройка параллельного поиска
+private extension SearchViewController {
+    func setupSearchTextField() {
+        searchTextField.addTarget(self, action: #selector(textFieldDidChange(_:)), for: .editingChanged)
+    }
+    
+    @objc private func textFieldDidChange(_ textField: UITextField) {
+        searchTask?.cancel()
+
+        let newSearchTask = DispatchWorkItem {
+            let query = textField.text ?? ""
+        }
+        searchTask = newSearchTask
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            if self.searchTask === newSearchTask {
+                newSearchTask.perform()
+            }
+        }
     }
 }
 
