@@ -15,11 +15,11 @@ final class SearchViewController: UIViewController {
     }()
     
     private let searchTextField: UITextField = {
-        let tf = UITextField()
-        tf.backgroundColor = .white
-        tf.layer.cornerRadius = 5
-        tf.placeholder = "Search book"
-        return tf
+        let textField = UITextField()
+        textField.backgroundColor = .white
+        textField.layer.cornerRadius = 5
+        textField.placeholder = "Search book"
+        return textField
     }()
     
     private var books: [Item] = [] {
@@ -29,7 +29,6 @@ final class SearchViewController: UIViewController {
     }
     
     private var searchTask: DispatchWorkItem?
-    
     private let coordinator: SearchCoordinator
     private let query = "book"
     

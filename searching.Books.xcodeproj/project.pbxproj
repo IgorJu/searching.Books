@@ -108,8 +108,8 @@
 			isa = PBXGroup;
 			children = (
 				782012B62B73D00600BB44D9 /* SearchViewController.swift */,
-				782012DC2B73E61B00BB44D9 /* BookTableViewCell.swift */,
 				782012CE2B73E29600BB44D9 /* SearchViewModel.swift */,
+				782012DC2B73E61B00BB44D9 /* BookTableViewCell.swift */,
 			);
 			path = Search;
 			sourceTree = "<group>";

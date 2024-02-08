@@ -14,8 +14,12 @@ struct BookDetailViewModel {
     let publishedYear: String
     
     init(book: Item) {
-        
-        thumbnailURL = URL(string: book.volumeInfo.imageLinks?.thumbnail?.replacingOccurrences(of: "http://", with: "https://") ?? "")
+        thumbnailURL = URL(
+            string: book.volumeInfo.imageLinks?.thumbnail?.replacingOccurrences(
+                of: "http://",
+                with: "https://"
+            ) ?? ""
+        )
         title = book.volumeInfo.title
         authors = book.volumeInfo.authors?.joined(separator: ", ")
         publishedYear = book.volumeInfo.publishedDate ?? ""
